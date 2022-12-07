@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source "$(dirname "$0")/../lib/shared.bash"
+
+OS=$(uname -s)
+MACHINE="$(uname -m)"
+
+case "$OS" in
+  Linux*)
+    case $MACHINE in
+      x86_64*) URL="$GH_REPO/releases/download/v$ASDF_INSTALL_VERSION/geckodriver-v$ASDF_INSTALL_VERSION-linux64.tar.gz" ;;
+      *) fail "$MACHINE on $OS is not (yet) supported" ;;
+    esac ;;
+  Darwin*) URL="$GH_REPO/releases/download/v$ASDF_INSTALL_VERSION/geckodriver-v$ASDF_INSTALL_VERSION-macos.tar.gz" ;;
+esac
+
+mkdir -p "$ASDF_INSTALL_PATH/bin"
+
+ARCHIVE="geckodriver-$ASDF_INSTALL_VERSION.tar.gz"
+
+cd "$ASDF_INSTALL_PATH"
+
+curl -sSL -o "$ARCHIVE" -C - "$URL"
+
+tar -xzf "$ARCHIVE" --directory "$ASDF_INSTALL_PATH/bin" || fail "Could not extract $ARCHIVE"
+rm "$ARCHIVE"
+
+TOOL_CMD="geckodriver"
+test -x "$ASDF_INSTALL_PATH/bin/$TOOL_CMD" || fail "Expected $ASDF_INSTALL_PATH/bin/$TOOL_CMD to be executable."
+
+echo "##### geckodriver binary installed: $ASDF_INSTALL_PATH/bin/$TOOL_CMD"
+echo "$($ASDF_INSTALL_PATH/bin/$TOOL_CMD -V)"
+echo "#####"
+
+exit 0
